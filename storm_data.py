@@ -2,8 +2,6 @@ import requests
 import pandas as pd
 import json
 import os
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 # Prep the responses
 base_url = 'http://api.eia.gov/series/?series_id='
