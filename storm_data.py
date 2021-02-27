@@ -48,7 +48,27 @@ data['datetime'] = data.date + ' ' + data.time
 data.drop('timestamp', axis=1, inplace=True)
 data['date'] = pd.to_datetime(data.date)
 
-# Filter data to timeframe of storm and export to csv file
-tx_storm_data = data[(data.date >= '2021-02-11') & (data.date <= '2021-02-18')]
+# Filter data and export to csv file
+tx_storm_data = data[(data.date >= '2021-01-01') & (data.date <= '2021-02-26')]
 tx_storm_data.reset_index(drop=True, inplace=True)
 tx_storm_data.to_csv('tx_storm_data.csv', index_label='index')
+
+# Get some parallel weather data
+weather_daily_url = 'https://www.ncei.noaa.gov/pub/data/uscrn/products/daily01/2021/CRND0103-2021-TX_Austin_33_NW.txt'
+weather_daily_headers = 'https://www.ncei.noaa.gov/pub/data/uscrn/products/daily01/HEADERS.txt'
+
+# Prep headers
+headers = pd.read_table(weather_daily_headers, sep=' ')
+headers = headers.loc[0, :].values.tolist()
+
+# Parse and clean Austin temp data
+austin_weather = pd.read_fwf(weather_daily_url, col_spec='infer', names=headers)
+data = austin_weather.loc[:, ['LST_DATE', 'T_DAILY_AVG']]
+data.columns = ['date', 'temp_daily_avg']
+data['date'] = data.date.apply(lambda x: pd.to_datetime(str(x), format='%Y%m%d'))
+
+# Convert from Celsius to Fahrenheit
+data['temp_daily_avg'] = data.temp_daily_avg.apply(lambda x: x*9/5 + 32)
+
+# Export to csv
+data.to_csv('austin_daily_temp.csv', index=False)
